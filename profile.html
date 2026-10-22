@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>내 방식 QR 만들기</title>
+<meta name="description" content="1분이면 돼요. 글자 크기, 쉬운 말, 음성 안내처럼 편한 방식만 고르면 QR이 만들어져요.">
+<meta name="theme-color" content="#ffffff">
+<link rel="stylesheet" href="assets/base.css">
+<link rel="stylesheet" href="assets/profile.css">
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+</head>
+<body class="profile-page">
+<div class="app">
+  <div class="bar">
+    <button class="back" id="back" aria-label="뒤로" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <div class="progress" aria-hidden="true"><i id="prog" style="width:0"></i></div>
+    <span class="count" id="count"></span>
+  </div>
+  <main class="body" id="body" aria-live="polite"></main>
+  <div class="foot" id="foot"></div>
+</div>
+<script type="module" src="assets/profile.js"></script>
+</body>
+</html>

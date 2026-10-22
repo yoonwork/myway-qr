@@ -1,0 +1,61 @@
+/* 내 방식 QR — 공통 토큰과 부품 */
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css");
+
+:root {
+  --brand: #3182F6;
+  --brand-press: #1B64DA;
+  --brand-soft: #E8F3FF;
+  --ink: #191F28;
+  --ink-2: #4E5968;
+  --ink-3: #8B95A1;
+  --bg: #FFFFFF;
+  --bg-2: #F2F4F6;
+  --line: #E5E8EB;
+  --ok: #0E9F6E;
+  --warn: #F04452;
+  --radius-card: 20px;
+  --radius-btn: 16px;
+  --font: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  font-family: var(--font);
+  color: var(--ink);
+  background: var(--bg);
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid var(--brand); outline-offset: 2px; }
+.num { font-variant-numeric: tabular-nums; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* 버튼 */
+.cta {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; min-height: 56px; padding: 0 20px;
+  border: 0; border-radius: var(--radius-btn);
+  background: var(--brand); color: #fff; font-size: 17px; font-weight: 600;
+  transition: background .15s, transform .1s;
+}
+a.cta { text-decoration: none; }
+.cta:active { transform: scale(.98); background: var(--brand-press); }
+.cta[disabled] { background: #D1D6DB; color: #fff; cursor: default; transform: none; }
+.cta.sub { background: var(--bg-2); color: var(--ink); }
+.cta.sub:active { background: #E5E8EB; }
+
+.pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; background: var(--bg-2); color: var(--ink-2); font-size: 14px; font-weight: 500; }
+
+.toast {
+  position: fixed; left: 50%; bottom: 32px; z-index: 99; transform: translate(-50%, 20px);
+  padding: 14px 20px; border-radius: 14px; background: rgba(25,31,40,.92); color: #fff;
+  font-size: 15px; font-weight: 500; opacity: 0; pointer-events: none; transition: .25s; max-width: calc(100vw - 32px); text-align: center;
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }

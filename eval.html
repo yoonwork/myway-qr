@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI 성능 시험 · 내 방식 QR</title>
+<link rel="stylesheet" href="assets/base.css">
+<style>
+  body { background: var(--bg-2); }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 24px 16px 64px; }
+  a.home { color: var(--ink-2); text-decoration: none; font-size: 14px; }
+  h1 { font-size: 30px; letter-spacing: -.02em; margin: 14px 0 8px; }
+  .lead { color: var(--ink-2); font-size: 16px; line-height: 1.65; margin: 0 0 20px; }
+  .card { background: #fff; border-radius: 22px; padding: 22px; margin-bottom: 16px; }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+  .kpi { background: #fff; border-radius: 20px; padding: 18px; }
+  .kpi span { font-size: 13px; color: var(--ink-2); }
+  .kpi b { display: block; font-size: 30px; letter-spacing: -.02em; margin-top: 6px; font-variant-numeric: tabular-nums; }
+  .kpi small { font-size: 13px; color: var(--ink-3); }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 9px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--ink-3); font-weight: 600; font-size: 13px; }
+  .ok { color: var(--ok); font-weight: 700; } .no { color: var(--warn); font-weight: 700; }
+  .cta { max-width: 220px; }
+  #state { font-size: 14px; color: var(--ink-2); }
+  .row { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+  .seg { display: inline-flex; background: var(--bg-2); border-radius: 999px; padding: 4px; }
+  .seg button { border: 0; background: none; border-radius: 999px; padding: 10px 16px; font-size: 14px; font-weight: 600; color: var(--ink-2); }
+  .seg button.on { background: #fff; color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+  h2 { font-size: 19px; margin: 0 0 10px; }
+  @media (max-width: 720px) { .kpis { grid-template-columns: 1fr 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="home" href="./">← 내 방식 QR</a>
+  <h1>AI 성능 시험</h1>
+  <p class="lead">키오스크에 들어간 AI(multilingual-e5-small, 브라우저 실행)가 사람 말을 얼마나 잘 알아듣는지 이 화면에서 직접 잴 수 있어요. 시험 문장은 어르신 말투·사투리·줄임말을 섞어 썼어요.<br>
+  <b>확인용</b>은 AI를 다 고친 뒤 새로 쓰고, 결과를 보고 아무것도 고치지 않은 문장이에요. <b>개발용</b>은 고치는 동안 보면서 쓴 문장이라 점수가 더 높게 나올 수 있어요.</p>
+  <div class="card row">
+    <div class="seg" role="tablist"><button class="on" data-set="hold">확인용</button><button data-set="dev">개발용</button></div>
+    <button class="cta" id="run">시험 시작</button>
+    <span id="state">처음 한 번은 AI 모델(약 118MB)을 받느라 30초쯤 걸려요.</span>
+  </div>
+  <div class="kpis" id="kpis" hidden></div>
+  <div class="card" id="dept" hidden></div>
+  <div class="card" id="order" hidden></div>
+</div>
+<script type="module">
+  import * as AI from './assets/ai.js';
+  import { DEPTS } from './assets/data/hospital.js';
+  import { MENU } from './assets/data/cafe.js';
+  import * as E from './assets/data/evalset.js';
+  const $ = s => document.querySelector(s);
+  const name = id => id.split('|').map(x => DEPTS.find(d => d.id === x)?.n || MENU.find(m => m.id === x)?.n || '없음').join('/');
+  const pct = (a, b) => `${Math.round((a / b) * 100)}%`;
+  const hit = (ans, id) => ans.split('|').includes(id);
+  const SETS = {
+    hold: { dept: E.DEPT_HOLD, deptNeg: E.DEPT_HOLD_NEG, order: E.ORDER_HOLD, orderNeg: E.ORDER_HOLD_NEG },
+    dev: { dept: E.DEPT_TESTS, deptNeg: E.DEPT_NEG, order: E.ORDER_TESTS, orderNeg: E.ORDER_NEG },
+  };
+  let setName = 'hold';
+  document.querySelectorAll('.seg button').forEach(b => b.onclick = () => {
+    setName = b.dataset.set; document.querySelectorAll('.seg button').forEach(x => x.classList.toggle('on', x === b));
+  });
+
+  $('#run').onclick = async () => {
+    const T = SETS[setName];
+    $('#run').disabled = true;
+    const t0 = performance.now();
+    await AI.loadModel(p => ($('#state').textContent = `AI 모델 받는 중 ${Math.round(p * 100)}%`));
+    const loadSec = (performance.now() - t0) / 1000;
+    $('#state').textContent = '시험하는 중…';
+
+    let top1 = 0, top3 = 0, ms = 0; const rows = [];
+    for (const [q, ans] of T.dept) {
+      const s = performance.now(); const r = (await AI.rankDept(q, DEPTS)); ms += performance.now() - s;
+      const h1 = hit(ans, r[0].id), h3 = r.slice(0, 3).some(x => hit(ans, x.id));
+      top1 += h1; top3 += h3;
+      rows.push(`<tr><td>${q}</td><td>${name(ans)}</td><td>${r.slice(0, 3).map(x => name(x.id)).join(' · ')}</td><td class="${h1 ? 'ok' : h3 ? '' : 'no'}">${h1 ? '맞음' : h3 ? '3위 안' : '틀림'}</td></tr>`);
+    }
+    let negOk = 0;
+    for (const q of T.deptNeg) { const r = await AI.recommendDept(q, DEPTS); negOk += !r.length; rows.push(`<tr><td>${q}</td><td>추천 안 함</td><td>${r.length ? name(r[0].id) : '추천 안 함'}</td><td class="${r.length ? 'no' : 'ok'}">${r.length ? '틀림' : '맞음'}</td></tr>`); }
+
+    let full = 0, item = 0, oms = 0; const orows = [];
+    for (const [q, id, temp, big, qty] of T.order) {
+      const s = performance.now(); const r = await AI.parseOrder(q, MENU); oms += performance.now() - s;
+      const f = r[0]; const itemOk = !!f && hit(id, f.id);
+      const ok = itemOk && (temp === null || f.temp === temp) && (!!f.size === big) && f.qty === qty;
+      item += itemOk; full += ok;
+      const got = f ? `${name(f.id)}${f.temp ? ' ' + f.temp : ''}${f.size ? ' 큰' : ''} ${f.qty}` : '못 알아들음';
+      orows.push(`<tr><td>${q}</td><td>${name(id)}${temp ? ' ' + temp : ''}${big ? ' 큰' : ''} ${qty}</td><td>${got}</td><td class="${ok ? 'ok' : 'no'}">${ok ? '맞음' : itemOk ? '메뉴만 맞음' : '틀림'}</td></tr>`);
+    }
+    let oneg = 0;
+    for (const q of T.orderNeg) { const r = await AI.parseOrder(q, MENU); oneg += !r.length; orows.push(`<tr><td>${q}</td><td>주문 아님</td><td>${r.length ? name(r[0].id) : '주문 아님'}</td><td class="${r.length ? 'no' : 'ok'}">${r.length ? '틀림' : '맞음'}</td></tr>`); }
+
+    const n = T.dept.length, m = T.order.length, nn = T.deptNeg.length + T.orderNeg.length;
+    $('#kpis').hidden = false;
+    $('#kpis').innerHTML = `
+      <div class="kpi"><span>진료과 1순위 정확도</span><b>${pct(top1, n)}</b><small>${top1}/${n}문장 · 3위 안 ${pct(top3, n)}</small></div>
+      <div class="kpi"><span>주문 완전 정확도</span><b>${pct(full, m)}</b><small>${full}/${m} · 메뉴만 ${pct(item, m)}</small></div>
+      <div class="kpi"><span>엉뚱한 말 거르기</span><b>${pct(negOk + oneg, nn)}</b><small>${negOk + oneg}/${nn}문장</small></div>
+      <div class="kpi"><span>한 문장 처리 시간</span><b>${Math.round((ms + oms) / (n + m))}ms</b><small>모델 준비 ${loadSec.toFixed(1)}초</small></div>`;
+    $('#dept').hidden = false;
+    $('#dept').innerHTML = `<h2>증상 → 진료과 (${n}문장 + 엉뚱한 말 ${T.deptNeg.length})</h2><table><tr><th>말</th><th>정답</th><th>AI 1·2·3위</th><th>결과</th></tr>${rows.join('')}</table>`;
+    $('#order').hidden = false;
+    $('#order').innerHTML = `<h2>말로 주문 (${m}문장 + 엉뚱한 말 ${T.orderNeg.length})</h2><table><tr><th>말</th><th>정답</th><th>AI가 알아들은 것</th><th>결과</th></tr>${orows.join('')}</table>`;
+    $('#state').textContent = `${setName === 'hold' ? '확인용' : '개발용'} 끝 · ${/Mobile/.test(navigator.userAgent) ? '휴대폰' : 'PC'}에서 잰 값`;
+    window.__evalResult = { set: setName, top1, top3, n, full, item, m, neg: negOk + oneg, negN: nn, avgMs: (ms + oms) / (n + m), loadSec };
+    $('#run').disabled = false;
+  };
+</script>
+</body>
+</html>

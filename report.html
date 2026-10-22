@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>운영자 리포트 · 내 방식 QR</title>
+<link rel="stylesheet" href="assets/base.css">
+<style>
+  body { background: var(--bg-2); }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 24px 16px 64px; }
+  a.home { color: var(--ink-2); text-decoration: none; font-size: 14px; }
+  h1 { font-size: 30px; letter-spacing: -.02em; margin: 14px 0 8px; }
+  .lead { color: var(--ink-2); font-size: 16px; line-height: 1.65; margin: 0 0 20px; }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+  .kpi { background: #fff; border-radius: 20px; padding: 18px; }
+  .kpi span { font-size: 13px; color: var(--ink-2); }
+  .kpi b { display: block; font-size: 30px; letter-spacing: -.02em; margin-top: 6px; font-variant-numeric: tabular-nums; }
+  .kpi small { font-size: 13px; color: var(--ink-3); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .card { background: #fff; border-radius: 22px; padding: 22px; }
+  .card h2 { font-size: 18px; margin: 0 0 4px; }
+  .card p.s { font-size: 14px; color: var(--ink-2); margin: 0 0 16px; }
+  .bars { display: grid; gap: 10px; }
+  .bar { display: grid; grid-template-columns: 130px 1fr 40px; align-items: center; gap: 10px; font-size: 14px; }
+  .bar i { display: block; height: 12px; border-radius: 6px; background: var(--brand); }
+  .bar .track { background: var(--bg-2); border-radius: 6px; height: 12px; }
+  .bar b { text-align: right; font-variant-numeric: tabular-nums; }
+  .check { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .check:last-child { border-bottom: 0; }
+  .check .d { flex: none; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; font-weight: 800; color: #fff; }
+  .check .d.y { background: var(--ok); } .check .d.n { background: var(--warn); }
+  .check b { display: block; font-size: 15px; }
+  .check span { font-size: 13px; color: var(--ink-2); line-height: 1.5; }
+  .empty { background: #fff; border-radius: 22px; padding: 28px; text-align: center; color: var(--ink-2); line-height: 1.6; margin-bottom: 16px; }
+  .empty a { color: var(--brand); font-weight: 600; }
+  .row { display: flex; gap: 10px; margin-top: 16px; }
+  .row .cta { max-width: 220px; }
+  @media (max-width: 760px) { .kpis { grid-template-columns: 1fr 1fr; } .grid2 { grid-template-columns: 1fr; } .bar { grid-template-columns: 100px 1fr 32px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="home" href="./">← 내 방식 QR</a>
+  <h1>운영자 리포트</h1>
+  <p class="lead">이 기기의 키오스크에서 실제로 쓴 기록이에요. 이름·말한 내용·프로필 원문은 남기지 않고, 어떤 기능이 몇 번 쓰였는지만 모아요.</p>
+  <div id="out"></div>
+  <div class="card" style="margin-top:16px">
+    <h2>기기 점검</h2>
+    <p class="s">이 기기가 내 방식 기능을 할 수 있는지 봐요. 못 하는 기능은 숨기지 않고 ‘직원 부르기’로 넘겨요.</p>
+    <div id="checks"></div>
+  </div>
+  <div class="row"><button class="cta sub" id="clear">기록 지우기</button></div>
+</div>
+<script type="module">
+  import { loadStats, clearStats } from './assets/mwq.js';
+  import { canSpeak, canListen } from './assets/speech.js';
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  function draw() {
+    const all = loadStats();
+    if (!all.length) {
+      $('#out').innerHTML = `<div class="empty">아직 이 기기에서 쓴 기록이 없어요.<br><a href="kiosk.html?site=hospital">병원</a>이나 <a href="kiosk.html?site=cafe">카페</a> 키오스크를 한 번 써 보세요.</div>`;
+      return;
+    }
+    const mine = all.filter(s => s.profile), plain = all.filter(s => !s.profile);
+    const rate = a => (a.length ? `${Math.round((a.filter(s => s.done).length / a.length) * 100)}%` : '—');
+    const avg = a => { const d = a.filter(s => s.done); return d.length ? `${Math.round(d.reduce((x, s) => x + s.sec, 0) / d.length)}초` : '—'; };
+    const sum = k => all.reduce((x, s) => x + (s.ev?.[k] || 0), 0);
+    const feat = {}; mine.forEach(s => (s.features || []).forEach(f => (feat[f] = (feat[f] || 0) + 1)));
+    const fe = Object.entries(feat).sort((a, b) => b[1] - a[1]); const max = Math.max(1, ...fe.map(x => x[1]));
+    $('#out').innerHTML = `
+      <div class="kpis">
+        <div class="kpi"><span>이용</span><b>${all.length}번</b><small>내 방식 ${mine.length} · 보통 ${plain.length}</small></div>
+        <div class="kpi"><span>끝까지 마침</span><b>${rate(mine)}</b><small>내 방식 · 보통은 ${rate(plain)}</small></div>
+        <div class="kpi"><span>마치는 데 걸린 시간</span><b>${avg(mine)}</b><small>내 방식 · 보통은 ${avg(plain)}</small></div>
+        <div class="kpi"><span>직원 부르기</span><b>${sum('help')}번</b><small>시간 초과 ${sum('timeout')}번</small></div>
+      </div>
+      <div class="grid2">
+        <div class="card"><h2>많이 쓴 내 방식 기능</h2><p class="s">어떤 도움이 자주 필요한지 보고 기본 화면을 고칠 수 있어요.</p>
+          <div class="bars">${fe.map(([k, v]) => `<div class="bar"><span>${esc(k)}</span><div class="track"><i style="width:${(v / max) * 100}%"></i></div><b>${v}</b></div>`).join('') || '<p class="s">아직 없어요</p>'}</div></div>
+        <div class="card"><h2>AI·안전 기능</h2><p class="s">AI가 말을 알아듣고, 실수 누름을 막은 횟수예요.</p>
+          <div class="bars">
+            ${[['AI에게 물어봄', sum('ai_query')], ['AI 추천대로 고름', sum('ai_accept')], ['말로 하기', sum('voice_input')], ['실수 누름 막음', sum('miss_prevented')], ['다른 메뉴 더 보기', sum('more')]].map(([k, v]) => `<div class="bar"><span>${k}</span><div class="track"><i style="width:${Math.min(100, v * 10)}%"></i></div><b>${v}</b></div>`).join('')}
+          </div></div>
+      </div>`;
+  }
+
+  function checks() {
+    const items = [
+      ['음성 안내', canSpeak(), '브라우저 음성 합성으로 화면 글을 읽어요', '못 하면 화면 글씨를 더 크게 하고 직원을 부르게 해요'],
+      ['말로 하기', canListen(), '브라우저 음성 인식으로 말을 글자로 바꿔요', '못 하면 글자로 써서 찾게 해요'],
+      ['카메라 (QR 읽기)', !!navigator.mediaDevices?.getUserMedia, 'QR을 카메라로 읽어요', '못 하면 체험용 프로필·코드 입력으로 적용해요'],
+      ['QR 해석', 'BarcodeDetector' in window, '기기 내장 QR 해석기가 있어요', '없으면 jsQR 라이브러리로 대신 읽어요'],
+      ['AI 실행 (WebAssembly)', typeof WebAssembly === 'object', '말을 알아듣는 AI를 기기 안에서 돌릴 수 있어요', '못 하면 낱말 맞추기로 찾아요'],
+    ];
+    $('#checks').innerHTML = items.map(([k, ok, y, n]) => `<div class="check"><span class="d ${ok ? 'y' : 'n'}">${ok ? '✓' : '!'}</span><div><b>${k} · ${ok ? '돼요' : '안 돼요'}</b><span>${ok ? y : n}</span></div></div>`).join('');
+  }
+
+  $('#clear').onclick = () => { clearStats(); draw(); };
+  draw(); checks();
+</script>
+</body>
+</html>

@@ -1,0 +1,79 @@
+/* 휴대폰: 내 방식 QR 만들기 (토스 앱 느낌) */
+body.profile-page { background: #fff; }
+@media (min-width: 560px) { body.profile-page { background: var(--bg-2); } }
+
+.app {
+  max-width: 480px; margin: 0 auto; min-height: 100vh; min-height: 100dvh; background: #fff;
+  display: flex; flex-direction: column; position: relative;
+}
+@media (min-width: 560px) { .app { margin: 24px auto; min-height: calc(100dvh - 48px); border-radius: 28px; overflow: hidden; box-shadow: 0 12px 40px rgba(0,0,0,.08); } }
+
+.bar { display: flex; align-items: center; gap: 8px; height: 56px; padding: 0 8px 0 4px; }
+.bar button.back { width: 44px; height: 44px; border: 0; background: none; border-radius: 12px; display: grid; place-items: center; }
+.bar button.back svg { width: 24px; height: 24px; }
+.bar button.back[hidden] { visibility: hidden; display: grid; }
+.progress { flex: 1; height: 4px; border-radius: 4px; background: var(--bg-2); overflow: hidden; }
+.progress i { display: block; height: 100%; background: var(--brand); border-radius: 4px; transition: width .3s; }
+.bar .count { font-size: 13px; color: var(--ink-3); width: 44px; text-align: right; font-variant-numeric: tabular-nums; }
+
+.body { flex: 1; padding: 8px 24px 24px; overflow-y: auto; }
+.body h1 { font-size: 26px; line-height: 1.38; letter-spacing: -.02em; margin: 12px 0 8px; font-weight: 700; }
+.body .lead { font-size: 17px; line-height: 1.6; color: var(--ink-2); margin: 0 0 24px; }
+
+.opts { display: flex; flex-direction: column; gap: 12px; }
+.opt {
+  display: flex; align-items: center; gap: 14px; width: 100%; min-height: 64px; padding: 16px 18px;
+  border: 0; border-radius: var(--radius-card); background: var(--bg-2); text-align: left; transition: background .15s, box-shadow .15s;
+}
+.opt:active { background: #E5E8EB; }
+.opt.on { background: var(--brand-soft); box-shadow: inset 0 0 0 2px var(--brand); }
+.opt .t { flex: 1; min-width: 0; }
+.opt .t b { display: block; font-size: 17px; font-weight: 600; }
+.opt .t span { display: block; font-size: 14px; color: var(--ink-2); margin-top: 3px; line-height: 1.45; }
+.opt .radio { width: 24px; height: 24px; border-radius: 50%; box-shadow: inset 0 0 0 2px #C9CFD6; flex: none; display: grid; place-items: center; }
+.opt.on .radio { box-shadow: inset 0 0 0 7px var(--brand); }
+.opt .play { flex: none; height: 36px; padding: 0 12px; border-radius: 999px; border: 0; background: #fff; font-size: 14px; font-weight: 600; color: var(--brand); }
+
+/* 글자 크기 미리보기 */
+.sample { font-weight: 700; color: var(--ink); }
+
+/* 화면 색 미리보기 */
+.swatch { width: 64px; height: 48px; border-radius: 12px; flex: none; display: grid; place-items: center; font-weight: 800; font-size: 18px; }
+.swatch.c0 { background: #fff; color: #191F28; box-shadow: inset 0 0 0 1px var(--line); }
+.swatch.c1 { background: #000; color: #FFD400; }
+.swatch.c2 { background: #fff; color: #000; box-shadow: inset 0 0 0 2px #000; }
+
+/* 말 비교 */
+.say { font-size: 18px; line-height: 1.5; font-weight: 600; }
+
+/* 누르기 시험 */
+.tap-zone { position: relative; height: 260px; border-radius: var(--radius-card); background: var(--bg-2); overflow: hidden; touch-action: manipulation; }
+.tap-zone .dot { position: absolute; width: 34px; height: 34px; margin: -17px 0 0 -17px; border-radius: 50%; border: 0; background: var(--brand); box-shadow: 0 0 0 6px rgba(49,130,246,.18); }
+.tap-zone .msg { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 24px; color: var(--ink-2); font-size: 16px; line-height: 1.5; }
+.tap-res { margin-top: 14px; font-size: 15px; color: var(--ink-2); min-height: 22px; }
+
+/* 결과 */
+.qr-card { margin: 8px auto 16px; width: 100%; max-width: 320px; aspect-ratio: 1; border-radius: 24px; background: #fff; box-shadow: 0 0 0 1px var(--line), 0 8px 30px rgba(0,0,0,.06); display: grid; place-items: center; padding: 22px; }
+.qr-card svg { width: 100%; height: 100%; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 18px; }
+.code { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px; color: var(--ink-3); margin-bottom: 8px; font-variant-numeric: tabular-nums; }
+.code button { border: 0; background: var(--bg-2); border-radius: 999px; padding: 4px 10px; font-size: 12px; color: var(--ink-2); }
+.note { font-size: 14px; color: var(--ink-2); line-height: 1.6; background: var(--bg-2); border-radius: 16px; padding: 14px 16px; margin: 0 0 12px; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+
+/* 처음 화면 그림 */
+.hero-art { margin: 8px 0 28px; border-radius: 24px; background: var(--bg-2); padding: 22px; }
+.hero-art svg { display: block; width: 100%; height: auto; }
+
+.foot { padding: 12px 24px calc(16px + env(safe-area-inset-bottom)); background: #fff; }
+.foot .cta + .cta { margin-top: 10px; }
+.link { display: block; width: 100%; margin-top: 8px; border: 0; background: none; color: var(--ink-2); font-size: 15px; padding: 12px; }
+
+/* 고른 글자 크기를 프로필 만들기 화면에도 바로 적용 */
+.app[data-t="2"] .body h1 { font-size: 30px; }
+.app[data-t="2"] .body .lead, .app[data-t="2"] .opt .t b { font-size: 19px; }
+.app[data-t="2"] .opt .t span { font-size: 16px; }
+.app[data-t="3"] .body h1 { font-size: 34px; }
+.app[data-t="3"] .body .lead, .app[data-t="3"] .opt .t b { font-size: 21px; }
+.app[data-t="3"] .opt .t span { font-size: 17px; }
+.app[data-t="2"] .cta, .app[data-t="3"] .cta { min-height: 60px; font-size: 19px; }

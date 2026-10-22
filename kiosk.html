@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="ko" data-t="1" data-c="0" data-b="0">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>내 방식 QR · 키오스크 체험</title>
+<meta name="description" content="QR 한 번이면 키오스크가 내 방식으로 바뀌어요. 큰 글씨, 쉬운 말, 음성 안내, 큰 버튼.">
+<link rel="stylesheet" href="assets/base.css">
+<link rel="stylesheet" href="assets/kiosk.css">
+</head>
+<body class="kiosk-page">
+<div class="kiosk">
+  <header class="k-top">
+    <div class="k-logo" id="logo" aria-hidden="true"></div>
+    <div class="k-venue" id="venue"></div>
+    <span class="k-clock num" id="clock"></span>
+    <button class="k-mwq" id="mwq-btn" data-act="mwq"></button>
+  </header>
+  <main class="k-main" id="screen" aria-live="polite"></main>
+  <footer class="k-bottom" id="bottom"></footer>
+</div>
+<script type="module" src="assets/kiosk.js"></script>
+</body>
+</html>
