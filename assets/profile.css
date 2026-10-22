@@ -8,7 +8,7 @@ body.profile-page { background: #fff; }
 }
 @media (min-width: 560px) { .app { margin: 24px auto; min-height: calc(100dvh - 48px); border-radius: 28px; overflow: hidden; box-shadow: 0 12px 40px rgba(0,0,0,.08); } }
 
-.bar { display: flex; align-items: center; gap: 8px; height: 56px; padding: 0 8px 0 4px; }
+.bar { display: flex; align-items: center; gap: 8px; height: 56px; padding: 0 16px 0 4px; }
 .bar button.back { width: 44px; height: 44px; border: 0; background: none; border-radius: 12px; display: grid; place-items: center; }
 .bar button.back svg { width: 24px; height: 24px; }
 .bar button.back[hidden] { visibility: hidden; display: grid; }
@@ -104,8 +104,8 @@ body.profile-page { background: #fff; }
 /* 내 방식 패스 (토스 신분증 느낌) */
 .pass { position: relative; overflow: hidden; border-radius: 26px; padding: 20px 20px 18px; margin: 4px 0 14px;
   background: linear-gradient(150deg, #F7FAFF 0%, #EAF2FF 55%, #E2ECFF 100%); box-shadow: 0 10px 30px rgba(49,130,246,.12); }
-.pass::before { content: ""; position: absolute; right: -60px; top: -80px; width: 240px; height: 240px; border-radius: 50%;
-  border: 18px solid rgba(160,140,255,.18); border-left-color: transparent; transform: rotate(-20deg); }
+.pass::before { content: ""; position: absolute; right: -90px; top: -110px; width: 300px; height: 300px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(140,120,255,.22) 0%, rgba(140,120,255,0) 68%); }
 .pass-top { position: relative; display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
 .pass-top span { display: block; font-size: 13px; color: var(--ink-2); }
 .pass-top b { display: block; font-size: 20px; letter-spacing: -.02em; margin-top: 2px; }

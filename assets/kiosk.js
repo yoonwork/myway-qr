@@ -390,6 +390,8 @@ async function askDeptInner(text) {
   } else { const id = AI.keywordMatch(text, DEPTS.map(d => ({ id: d.id, phrases: [d.n, ...d.ex] }))); recs = id ? [{ id }] : []; }
   if (!recs.length) return notUnderstood(easy() ? '잘 못 알아들었어요. 다시 말하거나 아래에서 골라 주세요.' : '추천할 진료과를 찾지 못했습니다.');
   S.fails = 0; S.d.recs = recs; S.d.heard = text.trim(); render();
+  // 글자가 아주 크면 추천 카드가 화면 아래로 밀리니 첫 추천이 보이게 내린다
+  document.querySelector('.k-card.top')?.scrollIntoView({ block: 'nearest' });
 }
 
 // AI 모델이 아직 내려오는 중이면 끝날 때까지 기다린다. 못 쓰게 되면 false.

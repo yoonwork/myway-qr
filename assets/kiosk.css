@@ -87,6 +87,7 @@ html[data-c="1"] .k-card.ai { background: #1A1700; }
 
 .k-big { min-height: calc(var(--k-hit) * 1.9); font-size: 1.35rem; }
 .k-big small { font-size: .9rem; }
+.k-card.k-big.center { min-height: calc(var(--k-hit) * 1.4); }   /* 확인 화면 두 버튼이 아래 막대에 가리지 않게 */
 
 /* 아래 막대 */
 .k-bottom { display: flex; align-items: center; gap: .6rem; padding: .75rem 1.25rem; background: var(--k-card); border-top: 1px solid var(--k-line); }
@@ -256,3 +257,6 @@ html[data-c="1"] .k-mwq.peek, html[data-c="2"] .k-mwq.peek { border: 2px solid v
 /* 오래된 브라우저 대체값 */
 .kiosk { height: min(100vh, 860px); height: min(100dvh, 860px); }
 .k-applied { background: var(--k-bg); background: color-mix(in srgb, var(--k-bg) 92%, transparent); }
+
+/* 화면이 바뀔 때 제목으로 옮기는 초점은 화면 읽기용이라 테두리를 그리지 않는다 */
+.k-title[tabindex="-1"]:focus { outline: none; }
