@@ -42,11 +42,11 @@
 <div class="wrap">
   <a class="home" href="./">← 내 방식 QR</a>
   <h1>운영자 리포트</h1>
-  <p class="lead">이 기기의 키오스크에서 실제로 쓴 기록이에요. 이름·말한 내용·프로필 원문은 남기지 않고, 어떤 기능이 몇 번 쓰였는지만 모아요.</p>
+  <p class="lead">이 기기의 키오스크에서 실제로 쓴 기록이에요. 한 번 한 번의 기록은 남기지 않고 ‘보통 / 내 방식’별 합계만 더해요. 이름·말한 내용·프로필 원문·시각은 저장하지 않아요.</p>
   <div id="out"></div>
   <div class="card" style="margin-top:16px">
     <h2>기기 점검</h2>
-    <p class="s">이 기기가 내 방식 기능을 할 수 있는지 봐요. 못 하는 기능은 숨기지 않고 ‘직원 부르기’로 넘겨요.</p>
+    <p class="s">이 기기가 내 방식 기능을 할 수 있는지 봐요. 음성 안내가 안 되는 기기에서는 글씨를 한 단계 더 키우고 직원 부르기를 먼저 권해요.</p>
     <div id="checks"></div>
   </div>
   <div class="row"><button class="cta sub" id="clear">기록 지우기</button></div>
@@ -58,38 +58,36 @@
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
   function draw() {
-    const all = loadStats();
-    if (!all.length) {
+    const { mine, plain } = loadStats();
+    if (!mine.n && !plain.n) {
       $('#out').innerHTML = `<div class="empty">아직 이 기기에서 쓴 기록이 없어요.<br><a href="kiosk.html?site=hospital">병원</a>이나 <a href="kiosk.html?site=cafe">카페</a> 키오스크를 한 번 써 보세요.</div>`;
       return;
     }
-    const mine = all.filter(s => s.profile), plain = all.filter(s => !s.profile);
-    const rate = a => (a.length ? `${Math.round((a.filter(s => s.done).length / a.length) * 100)}%` : '—');
-    const avg = a => { const d = a.filter(s => s.done); return d.length ? `${Math.round(d.reduce((x, s) => x + s.sec, 0) / d.length)}초` : '—'; };
-    const sum = k => all.reduce((x, s) => x + (s.ev?.[k] || 0), 0);
-    const feat = {}; mine.forEach(s => (s.features || []).forEach(f => (feat[f] = (feat[f] || 0) + 1)));
-    const fe = Object.entries(feat).sort((a, b) => b[1] - a[1]); const max = Math.max(1, ...fe.map(x => x[1]));
+    const rate = g => (g.n ? `${Math.round((g.done / g.n) * 100)}%` : '—');
+    const avg = g => (g.done ? `${Math.round(g.sec / g.done)}초` : '—');
+    const ev = k => (mine.ev[k] || 0) + (plain.ev[k] || 0);
+    const fe = Object.entries(mine.feat).sort((a, b) => b[1] - a[1]); const max = Math.max(1, ...fe.map(x => x[1]));
+    const evs = [['AI에게 물어봄', ev('ai_query')], ['AI 추천대로 고름', ev('ai_accept')], ['말로 버튼 고름', ev('voice_cmd')], ['응급 표현 → 직원 호출', ev('urgent')], ['실수 누름 막음', ev('miss_prevented')], ['보통 화면과 비교', ev('compare')]];
+    const emax = Math.max(1, ...evs.map(x => x[1]));
     $('#out').innerHTML = `
       <div class="kpis">
-        <div class="kpi"><span>이용</span><b>${all.length}번</b><small>내 방식 ${mine.length} · 보통 ${plain.length}</small></div>
+        <div class="kpi"><span>이용</span><b>${mine.n + plain.n}번</b><small>내 방식 ${mine.n} · 보통 ${plain.n}</small></div>
         <div class="kpi"><span>끝까지 마침</span><b>${rate(mine)}</b><small>내 방식 · 보통은 ${rate(plain)}</small></div>
         <div class="kpi"><span>마치는 데 걸린 시간</span><b>${avg(mine)}</b><small>내 방식 · 보통은 ${avg(plain)}</small></div>
-        <div class="kpi"><span>직원 부르기</span><b>${sum('help')}번</b><small>시간 초과 ${sum('timeout')}번</small></div>
+        <div class="kpi"><span>직원 부르기</span><b>${mine.help + plain.help}번</b><small>시간 초과 ${mine.timeout + plain.timeout}번</small></div>
       </div>
       <div class="grid2">
         <div class="card"><h2>많이 쓴 내 방식 기능</h2><p class="s">어떤 도움이 자주 필요한지 보고 기본 화면을 고칠 수 있어요.</p>
           <div class="bars">${fe.map(([k, v]) => `<div class="bar"><span>${esc(k)}</span><div class="track"><i style="width:${(v / max) * 100}%"></i></div><b>${v}</b></div>`).join('') || '<p class="s">아직 없어요</p>'}</div></div>
-        <div class="card"><h2>AI·안전 기능</h2><p class="s">AI가 말을 알아듣고, 실수 누름을 막은 횟수예요.</p>
-          <div class="bars">
-            ${[['AI에게 물어봄', sum('ai_query')], ['AI 추천대로 고름', sum('ai_accept')], ['말로 하기', sum('voice_input')], ['실수 누름 막음', sum('miss_prevented')], ['다른 메뉴 더 보기', sum('more')]].map(([k, v]) => `<div class="bar"><span>${k}</span><div class="track"><i style="width:${Math.min(100, v * 10)}%"></i></div><b>${v}</b></div>`).join('')}
-          </div></div>
+        <div class="card"><h2>AI·안전 기능</h2><p class="s">AI가 말을 알아듣고, 위험한 말을 직원에게 넘기고, 실수 누름을 막은 횟수예요.</p>
+          <div class="bars">${evs.map(([k, v]) => `<div class="bar"><span>${k}</span><div class="track"><i style="width:${(v / emax) * 100}%"></i></div><b>${v}</b></div>`).join('')}</div></div>
       </div>`;
   }
 
   function checks() {
     const items = [
-      ['음성 안내', canSpeak(), '브라우저 음성 합성으로 화면 글을 읽어요', '못 하면 화면 글씨를 더 크게 하고 직원을 부르게 해요'],
-      ['말로 하기', canListen(), '브라우저 음성 인식으로 말을 글자로 바꿔요', '못 하면 글자로 써서 찾게 해요'],
+      ['음성 안내', canSpeak(), '브라우저 음성 합성으로 화면 글을 읽어요', '못 하면 글씨를 한 단계 키우고 직원 부르기를 먼저 권해요'],
+      ['말로 하기', canListen(), '브라우저 음성 인식으로 말을 글자로 바꿔요 (크롬은 구글 서버를 거쳐요)', '못 하면 글자로 써서 찾게 해요'],
       ['카메라 (QR 읽기)', !!navigator.mediaDevices?.getUserMedia, 'QR을 카메라로 읽어요', '못 하면 체험용 프로필·코드 입력으로 적용해요'],
       ['QR 해석', 'BarcodeDetector' in window, '기기 내장 QR 해석기가 있어요', '없으면 jsQR 라이브러리로 대신 읽어요'],
       ['AI 실행 (WebAssembly)', typeof WebAssembly === 'object', '말을 알아듣는 AI를 기기 안에서 돌릴 수 있어요', '못 하면 낱말 맞추기로 찾아요'],

@@ -47,11 +47,14 @@
   .small { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 16px; }
   .small a { display: flex; align-items: center; justify-content: space-between; gap: 12px; text-decoration: none; color: inherit; background: #fff; border-radius: 20px; padding: 18px 22px; font-weight: 600; }
   .small a span { font-weight: 500; font-size: 14px; color: var(--ink-2); }
+  .m-only { display: none; }
   footer { margin-top: 40px; font-size: 13px; color: var(--ink-3); line-height: 1.7; }
   @media (max-width: 820px) {
     .hero, .tries, .small { grid-template-columns: 1fr; }
     .steps { grid-template-columns: 1fr 1fr; }
     .card { padding: 22px; }
+    .phone .qr, .pc-only { display: none; }
+    .m-only { display: block; }
   }
 </style>
 </head>
@@ -69,15 +72,16 @@
       <p>글자 크기, 쉬운 말, 음성 안내, 큰 버튼처럼 나에게 편한 방식을 휴대폰에 담아 두고, 키오스크에 QR을 보여 주면 화면이 그 방식으로 바뀌어요.</p>
       <ul class="points">
         <li><i>1</i><span><b>장애나 나이를 묻지 않아요.</b> ‘글자를 크게’ 같은 기능 코드만 넘겨요.</span></li>
-        <li><i>2</i><span><b>AI가 기기 안에서 돌아요.</b> “속이 쓰려요”를 소화기내과로, “따뜻한 라테 두 잔”을 주문으로 바꿔요. 말한 내용은 밖으로 나가지 않아요.</span></li>
+        <li><i>2</i><span><b>AI가 말을 알아들어요.</b> “속이 쓰려요”를 소화기내과로, “따뜻한 라테 두 잔”을 주문으로 바꾸고, 어느 화면에서든 말로 버튼을 골라요. 판단은 키오스크 안에서 하고 서버에 저장하지 않아요.</span></li>
         <li><i>3</i><span><b>끝나면 바로 지워요.</b> 키오스크는 이용이 끝나면 내 방식 정보를 남기지 않아요.</span></li>
       </ul>
     </div>
     <div class="card phone">
       <div class="qr" id="qr" aria-label="휴대폰으로 내 방식 QR 만들기 주소"></div>
-      <b>휴대폰으로 찍어서 만들어 보세요</b>
+      <b class="pc-only">휴대폰으로 찍어서 만들어 보세요</b>
+      <b class="m-only">지금 이 휴대폰에서 만들어 보세요</b>
       <p>1분 걸려요. 만든 QR은 휴대폰에만 저장돼요.</p>
-      <a class="cta" href="profile.html">이 화면에서 만들기</a>
+      <a class="cta" href="profile.html">내 방식 QR 만들기</a>
     </div>
   </section>
 
@@ -100,7 +104,7 @@
   <div class="steps">
     <div class="st"><em>1</em><b>프로필 만들기</b><span>휴대폰에서 글자·색·버튼·말·소리·시간을 직접 시험하고 골라요.</span></div>
     <div class="st"><em>2</em><b>QR 보여 주기</b><span>키오스크 카메라가 QR 속 기능 코드(예: MWQ1-T2C0L1…)만 읽어요.</span></div>
-    <div class="st"><em>3</em><b>화면 바꾸기</b><span>글자·대비·버튼 크기·제한시간이 바뀌고, AI가 필요한 버튼만 앞으로 꺼내요.</span></div>
+    <div class="st"><em>3</em><b>화면 바꾸기</b><span>글자·대비·버튼 크기·제한시간이 바뀌고, 한 화면 버튼을 3~4개로 줄여요. 말하면 AI가 맞는 버튼을 맨 앞으로 옮겨요.</span></div>
     <div class="st"><em>4</em><b>확인하고 지우기</b><span>결제·접수 전에 크게·소리로 다시 확인하고, 끝나면 바로 지워요.</span></div>
   </div>
 
@@ -112,7 +116,7 @@
   <footer>
     병원·카페는 체험용 가상 매장이에요. 실제 접수·결제는 되지 않아요.<br>
     아이디어: 2026 AI 라이프 아이디어 챌린지 수상 후보작 「내 방식 QR — 범용 접근성 프로필 패스」를 구현했어요.<br>
-    AI 모델: multilingual-e5-small(8비트, 브라우저에서 실행) · 음성: 브라우저 내장 음성 합성·인식
+    AI 모델: multilingual-e5-small(8비트, 브라우저에서 실행) · 음성: 브라우저 내장 음성 합성·인식(크롬은 기기 안 인식이 안 되면 구글 서버를 거쳐요) · 아이콘: Microsoft Fluent Emoji(MIT)
   </footer>
 </div>
 <script>

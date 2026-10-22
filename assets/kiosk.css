@@ -215,3 +215,44 @@ html[data-c="2"] .k-ticket b { color: #000; }
 .k-card.yes { background: var(--k-brand); color: var(--k-on-brand); }
 .k-card.yes svg { width: 1.6rem; height: 1.6rem; }
 html[data-c="1"] .k-card.yes, html[data-c="2"] .k-card.yes { border-color: var(--k-brand); }
+
+/* 본인 확인: 가로 화면이면 두 칸 */
+.k-ident { display: grid; gap: 1.5rem; }
+@media (min-width: 900px) and (orientation: landscape) {
+  .k-ident { grid-template-columns: 1fr 1fr; align-items: start; }
+  .k-ident .k-pin { justify-content: flex-start; }
+  .k-ident .k-keypad { margin: 0; max-width: none; }
+}
+
+/* 겹창 안 입력칸 */
+.k-sheet input { flex: 1; min-width: 0; min-height: 3rem; padding: 0 .9rem; border-radius: .8rem; border: 1px solid var(--k-line); background: var(--k-card); color: var(--k-ink); font: inherit; font-size: 1rem; }
+.k-keypad .k-card[data-arg="del"], .k-keypad .k-card[data-arg="clr"] { font-size: 1.05rem; white-space: nowrap; }
+
+/* 그림 아이콘 (버튼을 줄인 큰 화면에서만) */
+.k-card .k-ic { width: 2.6rem; height: 2.6rem; object-fit: contain; margin-bottom: .15rem; }
+.k-big .k-ic { width: 3.2rem; height: 3.2rem; }
+.k-card.disabled .k-ic { filter: grayscale(1); }
+
+/* 응급 안내 */
+.k-urgent h3 { color: #D92D20; }
+html[data-c="1"] .k-urgent h3 { color: #FF8A80; }
+.k-urgent-119 { margin: .75rem 0; padding: 1rem 1.1rem; border-radius: 1rem; background: #FEF3F2; color: #B42318; font-weight: 700; font-size: 1.1rem; line-height: 1.45; }
+html[data-c="1"] .k-urgent-119 { background: #2A0A08; color: #FFB4AB; border: 2px solid #FFB4AB; }
+html[data-c="2"] .k-urgent-119 { background: #fff; color: #000; border: 3px solid #000; }
+
+/* 말로 하기 · 직원 강조 · 비교 보기 */
+.k-say { background: var(--k-brand-soft); border-color: transparent; }
+.k-say.listening { animation: pulse 1.2s infinite; }
+.k-help.emph { background: var(--k-brand); color: var(--k-on-brand); border-color: var(--k-brand); }
+.k-mwq.peek { background: #FFF4E5; color: #8A4B00; }
+html[data-c="1"] .k-mwq.peek, html[data-c="2"] .k-mwq.peek { border: 2px solid var(--k-line); }
+
+/* 좁은 화면 + 큰 글씨: 묻기 상자를 두 줄로 */
+@media (max-width: 820px) { .k-ask { flex-wrap: wrap; } .k-ask-body { flex-basis: 100%; } .k-btn { white-space: normal; } .k-card .badge { position: static; align-self: flex-start; } }
+/* 키 작은 화면(1024×768 등)에서 키패드가 넘치지 않게 */
+@media (max-height: 820px) { .k-keypad .k-card { min-height: calc(var(--k-hit) * .95); } .k-ident .k-title { font-size: 1.35rem; } }
+/* 듣는 중 표시: 움직임 줄이기 설정이어도 보이게 */
+.k-mic.listening, .k-say.listening { outline: 4px solid var(--k-focus); outline-offset: 3px; }
+/* 오래된 브라우저 대체값 */
+.kiosk { height: min(100vh, 860px); height: min(100dvh, 860px); }
+.k-applied { background: var(--k-bg); background: color-mix(in srgb, var(--k-bg) 92%, transparent); }

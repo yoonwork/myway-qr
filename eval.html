@@ -65,22 +65,23 @@
   });
 
   $('#run').onclick = async () => {
-    const T = SETS[setName];
+    const T = SETS[setName], setNow = setName;
     $('#run').disabled = true;
     const t0 = performance.now();
-    await AI.loadModel(p => ($('#state').textContent = `AI 모델 받는 중 ${Math.round(p * 100)}%`));
+    try { await AI.loadModel(p => ($('#state').textContent = `AI 모델 받는 중 ${Math.round(p * 100)}%`)); }
+    catch { $('#state').textContent = 'AI 모델을 받지 못했어요. 인터넷 연결을 확인하고 다시 눌러 주세요.'; $('#run').disabled = false; return; }
     const loadSec = (performance.now() - t0) / 1000;
     $('#state').textContent = '시험하는 중…';
 
     let top1 = 0, top3 = 0, ms = 0; const rows = [];
     for (const [q, ans] of T.dept) {
-      const s = performance.now(); const r = (await AI.rankDept(q, DEPTS)); ms += performance.now() - s;
+      const s = performance.now(); const r = (await AI.rankDept(q, DEPTS)).filter(x => x.id[0] !== '_'); ms += performance.now() - s;
       const h1 = hit(ans, r[0].id), h3 = r.slice(0, 3).some(x => hit(ans, x.id));
       top1 += h1; top3 += h3;
       rows.push(`<tr><td>${q}</td><td>${name(ans)}</td><td>${r.slice(0, 3).map(x => name(x.id)).join(' · ')}</td><td class="${h1 ? 'ok' : h3 ? '' : 'no'}">${h1 ? '맞음' : h3 ? '3위 안' : '틀림'}</td></tr>`);
     }
     let negOk = 0;
-    for (const q of T.deptNeg) { const r = await AI.recommendDept(q, DEPTS); negOk += !r.length; rows.push(`<tr><td>${q}</td><td>추천 안 함</td><td>${r.length ? name(r[0].id) : '추천 안 함'}</td><td class="${r.length ? 'no' : 'ok'}">${r.length ? '틀림' : '맞음'}</td></tr>`); }
+    for (const q of T.deptNeg) { const r = await AI.recommendDept(q, DEPTS); const bad = r.urgent || r.recs.length; negOk += !bad; rows.push(`<tr><td>${q}</td><td>추천 안 함</td><td>${r.urgent ? '응급 안내' : r.recs.length ? name(r.recs[0].id) : '추천 안 함'}</td><td class="${bad ? 'no' : 'ok'}">${bad ? '틀림' : '맞음'}</td></tr>`); }
 
     let full = 0, item = 0, oms = 0; const orows = [];
     for (const [q, id, temp, big, qty] of T.order) {
@@ -94,6 +95,18 @@
     let oneg = 0;
     for (const q of T.orderNeg) { const r = await AI.parseOrder(q, MENU); oneg += !r.length; orows.push(`<tr><td>${q}</td><td>주문 아님</td><td>${r.length ? name(r[0].id) : '주문 아님'}</td><td class="${r.length ? 'no' : 'ok'}">${r.length ? '틀림' : '맞음'}</td></tr>`); }
 
+    // 응급 감지 (확인용 2)
+    let uHit = 0, uFalse = 0, n2 = 0; const urows = [];
+    if (setNow === 'hold') {
+      for (const q of E.URGENT_HOLD) { const r = await AI.recommendDept(q, DEPTS); uHit += !!r.urgent; urows.push(`<tr><td>${q}</td><td>응급 안내</td><td>${r.urgent ? `응급 안내 (${r.by === 'rule' ? '낱말 규칙' : 'AI'})` : r.recs.length ? name(r.recs[0].id) : '추천 안 함'}</td><td class="${r.urgent ? 'ok' : 'no'}">${r.urgent ? '맞음' : '놓침'}</td></tr>`); }
+      for (const q of E.NOT_URGENT_HOLD) { const r = await AI.recommendDept(q, DEPTS); uFalse += !!r.urgent; urows.push(`<tr><td>${q}</td><td>응급 아님</td><td>${r.urgent ? '응급 안내' : '응급 아님'}</td><td class="${r.urgent ? 'no' : 'ok'}">${r.urgent ? '잘못 잡음' : '맞음'}</td></tr>`); }
+      for (const q of E.NEG_HOLD2) { const a = await AI.recommendDept(q, DEPTS), b = await AI.parseOrder(q, MENU); const bad = a.urgent || a.recs.length || b.length; n2 += !bad; urows.push(`<tr><td>${q}</td><td>엉뚱한 말</td><td>${a.urgent ? '응급 안내' : a.recs.length ? name(a.recs[0].id) : b.length ? name(b[0].id) : '거름'}</td><td class="${bad ? 'no' : 'ok'}">${bad ? '틀림' : '맞음'}</td></tr>`); }
+    }
+    let u3 = 0, u3f = 0; const u3rows = [];
+    if (setNow === 'hold') {
+      for (const q of E.URGENT_HOLD3) { const r = await AI.recommendDept(q, DEPTS); u3 += !!r.urgent; u3rows.push(`<tr><td>${q}</td><td>응급 안내</td><td>${r.urgent ? `응급 안내 (${r.by === 'rule' ? '낱말 규칙' : 'AI'})` : r.recs.length ? name(r.recs[0].id) : '추천 안 함'}</td><td class="${r.urgent ? 'ok' : 'no'}">${r.urgent ? '맞음' : '놓침'}</td></tr>`); }
+      for (const q of E.NOT_URGENT_HOLD3) { const r = await AI.recommendDept(q, DEPTS); u3f += !!r.urgent; u3rows.push(`<tr><td>${q}</td><td>응급 아님</td><td>${r.urgent ? '응급 안내' : '응급 아님'}</td><td class="${r.urgent ? 'no' : 'ok'}">${r.urgent ? '잘못 잡음' : '맞음'}</td></tr>`); }
+    }
     const n = T.dept.length, m = T.order.length, nn = T.deptNeg.length + T.orderNeg.length;
     $('#kpis').hidden = false;
     $('#kpis').innerHTML = `
@@ -105,8 +118,10 @@
     $('#dept').innerHTML = `<h2>증상 → 진료과 (${n}문장 + 엉뚱한 말 ${T.deptNeg.length})</h2><table><tr><th>말</th><th>정답</th><th>AI 1·2·3위</th><th>결과</th></tr>${rows.join('')}</table>`;
     $('#order').hidden = false;
     $('#order').innerHTML = `<h2>말로 주문 (${m}문장 + 엉뚱한 말 ${T.orderNeg.length})</h2><table><tr><th>말</th><th>정답</th><th>AI가 알아들은 것</th><th>결과</th></tr>${orows.join('')}</table>`;
-    $('#state').textContent = `${setName === 'hold' ? '확인용' : '개발용'} 끝 · ${/Mobile/.test(navigator.userAgent) ? '휴대폰' : 'PC'}에서 잰 값`;
-    window.__evalResult = { set: setName, top1, top3, n, full, item, m, neg: negOk + oneg, negN: nn, avgMs: (ms + oms) / (n + m), loadSec };
+    if (u3rows.length) $('#order').insertAdjacentHTML('afterend', `<div class="card"><h2>응급 감지 (확인용 3) ${u3}/${E.URGENT_HOLD3.length} · 잘못 잡음 ${u3f}/${E.NOT_URGENT_HOLD3.length}</h2><table><tr><th>말</th><th>정답</th><th>AI</th><th>결과</th></tr>${u3rows.join('')}</table></div>`);
+    if (urows.length) $('#order').insertAdjacentHTML('afterend', `<div class="card"><h2>응급 감지 ${uHit}/${E.URGENT_HOLD.length} · 잘못 잡음 ${uFalse}/${E.NOT_URGENT_HOLD.length} · 엉뚱한 말 거르기 ${n2}/${E.NEG_HOLD2.length} (확인용 2)</h2><table><tr><th>말</th><th>정답</th><th>AI</th><th>결과</th></tr>${urows.join('')}</table></div>`);
+    $('#state').textContent = `${setNow === 'hold' ? '확인용' : '개발용'} 끝 · ${/Mobile/.test(navigator.userAgent) ? '휴대폰' : 'PC'}에서 잰 값`;
+    window.__evalResult = { set: setNow, top1, top3, n, full, item, m, neg: negOk + oneg, negN: nn, avgMs: (ms + oms) / (n + m), loadSec, urgent: uHit, urgentN: E.URGENT_HOLD.length, urgentFalse: uFalse, urgentFalseN: E.NOT_URGENT_HOLD.length, neg2: n2, neg2N: E.NEG_HOLD2.length, u3, u3N: E.URGENT_HOLD3.length, u3f, u3fN: E.NOT_URGENT_HOLD3.length };
     $('#run').disabled = false;
   };
 </script>

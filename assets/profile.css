@@ -77,3 +77,50 @@ body.profile-page { background: #fff; }
 .app[data-t="3"] .body .lead, .app[data-t="3"] .opt .t b { font-size: 21px; }
 .app[data-t="3"] .opt .t span { font-size: 17px; }
 .app[data-t="2"] .cta, .app[data-t="3"] .cta { min-height: 60px; font-size: 19px; }
+
+/* ── 소모임·토스 느낌: 강조 글자, 입체 아이콘 ── */
+.body h1 em { font-style: normal; color: var(--brand); }
+.head { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 4px; }
+.head .txt { flex: 1; min-width: 0; }
+.head .ic { flex: none; width: 84px; height: 84px; margin-top: 10px; border-radius: 50%; display: grid; place-items: center;
+  background: radial-gradient(circle at 35% 30%, #F4F8FF, #E3EDFF 70%); }
+.head .ic img { width: 58px; height: 58px; }
+
+/* 처음 화면 */
+.hero-title { font-size: 30px !important; }
+.hero { position: relative; height: 210px; margin: 6px 0 22px; }
+.hero .orb { position: absolute; left: 50%; top: 50%; width: 190px; height: 190px; margin: -95px 0 0 -95px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #F5F9FF, #DCE8FF 72%); display: grid; place-items: center; }
+.hero .big { width: 120px; height: 120px; filter: drop-shadow(0 14px 18px rgba(30,70,160,.18)); }
+.hero .sat { position: absolute; width: 58px; height: 58px; filter: drop-shadow(0 8px 10px rgba(0,0,0,.12)); }
+.hero .s1 { left: 6%; top: 18%; }
+.hero .s2 { right: 6%; top: 52%; }
+.hero .s3 { right: 18%; top: 4%; width: 36px; height: 36px; }
+.how { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+.how li { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 16px; background: var(--bg-2); font-size: 15px; color: var(--ink-2); }
+.how li img { width: 30px; height: 30px; flex: none; }
+.how li b { color: var(--ink); }
+
+/* 내 방식 패스 (토스 신분증 느낌) */
+.pass { position: relative; overflow: hidden; border-radius: 26px; padding: 20px 20px 18px; margin: 4px 0 14px;
+  background: linear-gradient(150deg, #F7FAFF 0%, #EAF2FF 55%, #E2ECFF 100%); box-shadow: 0 10px 30px rgba(49,130,246,.12); }
+.pass::before { content: ""; position: absolute; right: -60px; top: -80px; width: 240px; height: 240px; border-radius: 50%;
+  border: 18px solid rgba(160,140,255,.18); border-left-color: transparent; transform: rotate(-20deg); }
+.pass-top { position: relative; display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.pass-top span { display: block; font-size: 13px; color: var(--ink-2); }
+.pass-top b { display: block; font-size: 20px; letter-spacing: -.02em; margin-top: 2px; }
+.pass-ic { width: 44px; height: 44px; }
+.pass-qr { position: relative; background: #fff; border-radius: 18px; padding: 18px; aspect-ratio: 1; max-width: 300px; margin: 0 auto; box-shadow: 0 2px 10px rgba(0,0,0,.05); }
+.pass-qr svg { width: 100%; height: 100%; display: block; }
+.pass-timer { position: relative; display: flex; align-items: center; gap: 10px; justify-content: center; margin: 12px 0 12px; font-size: 13px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.pass-timer .bar { width: 90px; height: 4px; border-radius: 4px; background: rgba(49,130,246,.15); overflow: hidden; }
+.pass-timer .bar i { display: block; height: 100%; background: var(--brand); border-radius: 4px; transition: width 1s linear; }
+.pass .chips { position: relative; margin-bottom: 0; }
+.pass .pill { background: rgba(255,255,255,.85); }
+.note { display: flex; gap: 10px; align-items: flex-start; }
+.note .note-ic { width: 26px; height: 26px; flex: none; margin-top: 1px; }
+.btn-ic { width: 22px; height: 22px; }
+.row2 .cta { font-size: 15px; padding: 0 12px; }
+.opt-row { position: relative; }
+.opt-row .play { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); }
+.opt-row .opt:has(+ .play) .radio { visibility: hidden; }
