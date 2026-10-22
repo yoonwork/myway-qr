@@ -7,6 +7,7 @@ QR 한 번이면 키오스크가 나에게 맞춰요. 2026 AI 라이프 솔루�
 - 휴대폰으로 프로필 만들기: `profile.html`
 - 키오스크 체험: `kiosk.html?site=hospital` (병원 접수), `kiosk.html?site=cafe` (카페 주문)
   - `#p=MWQ1-…` 를 붙이면 그 프로필로 바로 열려요. `&test=1` 은 걸린 시간·누른 횟수를 보여 주는 시험 모드
+- 시연 영상(약 3분 50초): `assets/video/myway-demo.mp4` (첫 화면 #demo)
 - 운영자 리포트·기기 점검: `report.html`
 - AI 성능 시험: `eval.html` (확인용·개발용 문장)
 
