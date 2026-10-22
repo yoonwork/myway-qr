@@ -88,6 +88,9 @@ html[data-c="1"] .k-card.ai { background: #1A1700; }
 .k-big { min-height: calc(var(--k-hit) * 1.9); font-size: 1.35rem; }
 .k-big small { font-size: .9rem; }
 .k-card.k-big.center { min-height: calc(var(--k-hit) * 1.4); }   /* 확인 화면 두 버튼이 아래 막대에 가리지 않게 */
+/* 글자가 아주 커서 확인 내용이 길어져도 ‘고칠래요 / 네, 맞아요’는 늘 화면 아래에 보이게 */
+.k-stick { position: sticky; bottom: -1.25rem; z-index: 2; background: var(--k-bg); padding: .75rem 0 1.25rem; }
+.k-stick .k-card.k-big.center { min-height: var(--k-hit); }
 
 /* 아래 막대 */
 .k-bottom { display: flex; align-items: center; gap: .6rem; padding: .75rem 1.25rem; background: var(--k-card); border-top: 1px solid var(--k-line); }

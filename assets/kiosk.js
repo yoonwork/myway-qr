@@ -259,7 +259,7 @@ SCREENS.hospital.confirm = () => {
     next: focus() ? null : { act: 'submit', label: '접수' },
     html: `<p class="k-step">${easy() ? '4 / 4' : '진료 접수 4/4'}</p><h1 class="k-title">${esc(t(H_COPY.confirm))}</h1>
       <ul class="k-sum" style="margin-top:1rem">${rows.map(([k, v]) => `<li><span>${esc(k)}</span><b>${esc(v)}</b></li>`).join('')}</ul>
-      ${focus() ? `<div class="k-grid" style="--cols:2"><button class="k-card k-big center" data-act="back">${easy() ? '고칠래요' : '수정'}</button><button class="k-card k-big center yes" data-act="submit">${ICON.check}${easy() ? '네, 맞아요' : '접수'}</button></div>` : ''}`,
+      ${focus() ? `<div class="k-grid k-stick" style="--cols:2"><button class="k-card k-big center" data-act="back">${easy() ? '고칠래요' : '수정'}</button><button class="k-card k-big center yes" data-act="submit">${ICON.check}${easy() ? '네, 맞아요' : '접수'}</button></div>` : ''}`,
   };
 };
 
@@ -343,7 +343,7 @@ SCREENS.cafe.confirm = () => {
       <ul class="k-sum" style="margin-top:1rem">${S.d.cart.map(x => `<li><span>${esc(lineText(x))}</span><b>${esc(wonBoth(linePrice(x)))}</b></li>`).join('')}
         <li><span>${easy() ? '내는 방법' : '결제 수단'}</span><b>${esc(t(pay))}</b></li>
         <li class="total"><span>${easy() ? '모두' : '합계'}</span><b>${esc(wonBoth(cartSum()))}</b></li></ul>
-      ${focus() ? `<div class="k-grid" style="--cols:2"><button class="k-card k-big center" data-act="back">${easy() ? '고칠래요' : '수정'}</button><button class="k-card k-big center yes" data-act="payNow">${ICON.check}${easy() ? '네, 맞아요' : '결제하기'}</button></div>` : ''}`,
+      ${focus() ? `<div class="k-grid k-stick" style="--cols:2"><button class="k-card k-big center" data-act="back">${easy() ? '고칠래요' : '수정'}</button><button class="k-card k-big center yes" data-act="payNow">${ICON.check}${easy() ? '네, 맞아요' : '결제하기'}</button></div>` : ''}`,
   };
 };
 
