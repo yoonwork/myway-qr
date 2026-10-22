@@ -152,7 +152,8 @@ function tapTest() {
     const d = document.createElement('button'); d.className = 'dot'; d.setAttribute('aria-label', `점 ${n + 1}`);
     const w = zone.clientWidth, h = zone.clientHeight;
     d.style.left = `${30 + Math.random() * (w - 60)}px`; d.style.top = `${30 + Math.random() * (h - 60)}px`;
-    d.onpointerdown = e => { e.stopPropagation(); n++; place(); };
+    d.onpointerdown = e => { e.stopPropagation(); e.preventDefault(); n++; place(); };
+    d.onclick = e => { if (e.detail === 0) { e.stopPropagation(); n++; place(); $('#zone .dot')?.focus(); } };   // 키보드
     zone.appendChild(d);
   };
   zone.onpointerdown = () => { if (n < 5) { miss++; res.textContent = `빗나간 누름 ${miss}번`; } };

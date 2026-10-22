@@ -24,7 +24,7 @@ export const H_COPY = {
 
 export const H_TASKS = [
   { id: 'reception', ic: 'stetho', n: '진료 접수', e: '진료 받으러 왔어요', live: true },
-  { id: 'payment', n: '수납', e: '진료비 낼게요' },
+  { id: 'payment', ic: 'idcard', n: '수납', e: '진료비 낼게요' },
   { id: 'cert', ic: 'idcard', n: '제증명 발급', e: '서류 뗄게요' },
   { id: 'rx', ic: 'pill', n: '처방전 재출력', e: '처방전 다시 받을게요' },
 ];

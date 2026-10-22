@@ -1,6 +1,6 @@
 // 키오스크 화면 엔진 (병원 접수 · 카페 주문 공용)
 import { decode, isPlain, summary, PRESETS, logSession, toast } from './mwq.js';
-import { speak, stopSpeaking, canSpeak, canListen, listenOnce } from './speech.js';
+import { speak, stopSpeaking, canSpeak, canListen, listenOnce, speechMode } from './speech.js';
 import * as AI from './ai.js';
 import { HOSPITAL, H_COPY, H_TASKS, H_VISIT, DEPTS } from './data/hospital.js';
 import { CAFE, C_COPY, CATS, MENU, SIZE_UP, SHOT_UP, PAYS } from './data/cafe.js';
@@ -15,6 +15,7 @@ const QR_FRESH_MIN = 5;          // 폰 QR은 1분마다 새로 만들어지고,
 const S = {
   profile: null,                 // 적용된 내 방식 프로필 (없으면 보통 화면)
   screen: 'attract',
+  changedAt: 0,                  // 화면·겹창이 마지막으로 바뀐 때 (실수 방지)
   hist: [],
   d: {},                         // 이번 이용에서 고른 것
   session: null,
@@ -98,7 +99,7 @@ function startAI() {
     .catch(() => { S.ai.state = 'fail'; updateAIState(); });
 }
 function aiLabel() {
-  return { off: '', loading: `AI 준비 중 ${Math.round(S.ai.pct * 100)}%`, ready: 'AI 준비됨 · 판단은 이 기기 안에서', fail: 'AI를 못 불러왔어요 · 낱말로만 찾을게요' }[S.ai.state];
+  return { off: '', loading: `AI 준비 중 ${Math.round(S.ai.pct * 100)}%`, ready: `AI 준비됨 · 판단은 이 기기 안에서${canListen() && speechMode() !== 'local' ? ' · 음성 인식은 서버를 거칠 수 있음' : ''}`, fail: 'AI를 못 불러왔어요 · 낱말로만 찾을게요' }[S.ai.state];
 }
 function updateAIState() { const el = $('.k-ai-state'); if (el) { el.className = 'k-ai-state' + (S.ai.state === 'ready' ? ' ready' : ''); el.lastChild.textContent = aiLabel(); } }
 
@@ -126,6 +127,8 @@ function render(opts = {}) {
   const out = scr();
   const main = $('#screen');
   const changed = S.drawn !== S.screen;
+  if (changed) S.changedAt = performance.now();
+  if (S.ai.state === 'off' && out.html.includes('id="ask"')) setTimeout(startAI, 0);   // 휴대폰: 말하기 칸이 처음 보일 때 모델을 받는다
   const fa = document.activeElement?.dataset?.act, fg = document.activeElement?.dataset?.arg;
   const keepTop = opts.quiet ? main.scrollTop : 0;
   main.innerHTML = out.html; main.scrollTop = keepTop;
@@ -258,8 +261,8 @@ SCREENS.hospital.confirm = () => {
     say: `${t(H_COPY.confirm)} ${dept.n}, ${easy() ? visit.e : visit.n}. 맞으면 접수하기를 눌러 주세요.`,
     next: focus() ? null : { act: 'submit', label: '접수' },
     html: `<p class="k-step">${easy() ? '4 / 4' : '진료 접수 4/4'}</p><h1 class="k-title">${esc(t(H_COPY.confirm))}</h1>
-      <ul class="k-sum" style="margin-top:1rem">${rows.map(([k, v]) => `<li><span>${esc(k)}</span><b>${esc(v)}</b></li>`).join('')}</ul>
-      ${focus() ? `<div class="k-grid k-stick" style="--cols:2"><button class="k-card k-big center" data-act="back">${easy() ? '고칠래요' : '수정'}</button><button class="k-card k-big center yes" data-act="submit">${ICON.check}${easy() ? '네, 맞아요' : '접수'}</button></div>` : ''}`,
+      <div class="k-confirm"><ul class="k-sum" style="margin-top:1rem">${rows.map(([k, v]) => `<li><span>${esc(k)}</span><b>${esc(v)}</b></li>`).join('')}</ul>
+      ${focus() ? `<div class="k-grid k-stick" style="--cols:2"><button class="k-card k-big center" data-act="back">${easy() ? '고칠래요' : '수정'}</button><button class="k-card k-big center yes" data-act="submit">${ICON.check}${easy() ? '네, 맞아요' : '접수'}</button></div>` : ''}</div>`,
   };
 };
 
@@ -340,10 +343,10 @@ SCREENS.cafe.confirm = () => {
     say: `${t(C_COPY.confirm)} ${(S.d.cart || []).map(lineText).join(', ')}. 모두 ${won(cartSum())}이에요.`,
     next: focus() ? null : { act: 'payNow', label: '결제하기' },
     html: `<h1 class="k-title">${esc(t(C_COPY.confirm))}</h1>
-      <ul class="k-sum" style="margin-top:1rem">${S.d.cart.map(x => `<li><span>${esc(lineText(x))}</span><b>${esc(wonBoth(linePrice(x)))}</b></li>`).join('')}
+      <div class="k-confirm"><ul class="k-sum" style="margin-top:1rem">${S.d.cart.map(x => `<li><span>${esc(lineText(x))}</span><b>${esc(wonBoth(linePrice(x)))}</b></li>`).join('')}
         <li><span>${easy() ? '내는 방법' : '결제 수단'}</span><b>${esc(t(pay))}</b></li>
         <li class="total"><span>${easy() ? '모두' : '합계'}</span><b>${esc(wonBoth(cartSum()))}</b></li></ul>
-      ${focus() ? `<div class="k-grid k-stick" style="--cols:2"><button class="k-card k-big center" data-act="back">${easy() ? '고칠래요' : '수정'}</button><button class="k-card k-big center yes" data-act="payNow">${ICON.check}${easy() ? '네, 맞아요' : '결제하기'}</button></div>` : ''}`,
+      ${focus() ? `<div class="k-grid k-stick" style="--cols:2"><button class="k-card k-big center" data-act="back">${easy() ? '고칠래요' : '수정'}</button><button class="k-card k-big center yes" data-act="payNow">${ICON.check}${easy() ? '네, 맞아요' : '결제하기'}</button></div>` : ''}</div>`,
   };
 };
 
@@ -388,7 +391,7 @@ async function askDeptInner(text) {
     if (r.urgent) return openUrgent(text);
     recs = r.recs;
   } else { const id = AI.keywordMatch(text, DEPTS.map(d => ({ id: d.id, phrases: [d.n, ...d.ex] }))); recs = id ? [{ id }] : []; }
-  if (!recs.length) return notUnderstood(easy() ? '잘 못 알아들었어요. 다시 말하거나 아래에서 골라 주세요.' : '추천할 진료과를 찾지 못했습니다.');
+  if (!recs.length) { if (S.d.recs?.length) { S.d.recs = []; render({ quiet: true }); } return notUnderstood(easy() ? '잘 못 알아들었어요. 다시 말하거나 아래에서 골라 주세요.' : '추천할 진료과를 찾지 못했습니다.'); }
   S.fails = 0; S.d.recs = recs; S.d.heard = text.trim(); render();
   // 글자가 아주 크면 추천 카드가 화면 아래로 밀리니 첫 추천이 보이게 내린다
   document.querySelector('.k-card.top')?.scrollIntoView({ block: 'nearest' });
@@ -483,6 +486,7 @@ function openSheet(html, say, kind = '') {
   const back = $('#sheet') ? S.sheetBack : document.activeElement;
   closeSheet(true);
   const bg = document.createElement('div'); bg.className = 'k-sheet-bg'; bg.id = 'sheet'; bg.dataset.kind = kind;
+  S.changedAt = performance.now();
   bg.innerHTML = `<div class="k-sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">${html}</div>`;
   $('.kiosk').appendChild(bg);
   const h = bg.querySelector('h3'); if (h) h.id = 'sheet-title';
@@ -494,6 +498,7 @@ function openSheet(html, say, kind = '') {
 function closeSheet(keepFocus) {
   if (!$('#sheet')) return;
   $('#sheet').remove();
+  if (!keepFocus) S.changedAt = performance.now();
   ['.k-top', '.k-main', '.k-bottom'].forEach(sel => $(sel)?.removeAttribute('inert'));
   if (!keepFocus && S.sheetBack?.isConnected) S.sheetBack.focus({ preventScroll: true });
 }
@@ -515,6 +520,7 @@ const ACT = {
   resay: () => S.lastSay && speak(S.lastSay, voiceLv() || 1),
   help: () => { stat('help'); openSheet(`<h3>${easy() ? '직원을 불렀어요' : '직원을 호출했습니다'}</h3><p class="k-sub">${easy() ? '잠시만 기다려 주세요. 곧 와서 도와드려요.' : '잠시만 기다려 주십시오.'}</p><div class="k-sheet-actions"><button class="k-btn primary" data-act="sheetClose">${easy() ? '괜찮아요, 계속할게요' : '닫기'}</button></div>`, easy() ? '직원을 불렀어요. 잠시만 기다려 주세요.' : '직원을 호출했습니다.', 'help'); },
   sheetClose: () => { closeSheet(); },
+  idleOk: () => resetIdle(),   // 시간 경고만 닫는다 (열려 있는 겹창은 그대로)
   more: () => { const m = $('#more'); m.hidden = !m.hidden; if (!m.hidden) m.scrollIntoView({ behavior: 'smooth', block: 'start' }); stat('more'); },
   // 병원
   task: id => { if (id !== 'reception') return toast(easy() ? '체험판에서는 진료 접수만 돼요' : '체험판에서는 진료 접수만 지원합니다'); S.d.task = id; go('visit'); },
@@ -568,7 +574,7 @@ async function listen(handler, btn) {
 const SYN = {
   back: ['뒤로', '이전', '고칠래요', '다시 할래요'], home: ['처음으로', '처음부터 할래요', '그만할래요'], help: ['직원 불러 주세요', '사람 불러 주세요', '도와주세요'],
   resay: ['다시 말해 주세요', '뭐라고요', '다시 들려주세요'], submit: ['접수할게요', '네 맞아요', '맞아요'], payNow: ['계산할게요', '결제할게요', '네 맞아요'],
-  identNext: ['다 눌렀어요', '다음'], toPay: ['주문할게요', '계산할게요', '다 골랐어요'], sheetClose: ['괜찮아요', '닫아 주세요', '취소할게요'],
+  identNext: ['다 눌렀어요', '다음'], toPay: ['주문할게요', '계산할게요', '다 골랐어요'], idleOk: ['시간 더 쓸게요', '계속할게요'], sheetClose: ['괜찮아요', '닫아 주세요', '취소할게요'],
   heardAdd: ['네 담을게요', '맞아요 담아 주세요'], optAdd: ['담을게요', '이걸로 할게요'], paid: ['카드 꽂았어요', '했어요'], start: ['시작할게요'],
   'visit:first': ['처음 왔어요', '처음이에요'], 'visit:again': ['와 본 적 있어요', '다시 왔어요'], 'task:reception': ['진료 받으러 왔어요', '접수하러 왔어요'],
   'optTemp:HOT': ['따뜻하게', '뜨겁게'], 'optTemp:ICE': ['차갑게', '시원하게', '아이스로'], 'payWith:card': ['카드로 할게요'], 'payWith:pay': ['휴대폰으로 낼게요', '페이로 할게요'],
@@ -659,7 +665,7 @@ function stopScan(idle) {
 const loadScript = src => new Promise((ok, no) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = no; document.head.appendChild(s); });
 
 /* ───────── 누르기 처리 (실수 방지 포함) ───────── */
-let down = null, lastFire = 0, lastEl = null;
+let down = null, lastFire = 0, lastKey = '';
 let lastDown = 0, firedByTouch = false;
 document.addEventListener('pointerdown', e => {
   down = null; lastDown = performance.now();
@@ -673,9 +679,11 @@ document.addEventListener('pointerup', e => {
   const inside = el.contains(document.elementFromPoint(e.clientX, e.clientY));
   const guard = S.profile?.touch === 1, now = performance.now();
   if (!inside) { if (guard) stat('miss_prevented'); return; }
-  // 손 떨림: 같은 버튼이 0.3초 안에 두 번 눌리면 한 번으로 친다. 손가락이 버튼 밖으로 미끄러져 떼면 누르지 않는다(위).
-  if (guard && el === lastEl && now - lastFire < 300) { stat('miss_prevented'); return; }
-  lastFire = now; lastEl = el; firedByTouch = e.pointerType === 'touch'; fire(el);
+  // 손 떨림: 같은 동작이 0.35초 안에 또 눌리거나, 화면·겹창이 바뀐 지 0.45초 안에 누르면(두 번째 탭이 새 화면에 떨어진 것) 한 번 거른다.
+  // 손가락이 버튼 밖으로 미끄러져 떼면 누르지 않는다(위).
+  const key = `${el.dataset.act}:${el.dataset.arg ?? ''}`;
+  if (guard && ((key === lastKey && now - lastFire < 350) || (t0 >= S.changedAt && t0 - S.changedAt < 450))) { stat('miss_prevented'); return; }
+  lastFire = now; lastKey = key; firedByTouch = e.pointerType === 'touch'; fire(el);
 });
 // 터치로 이미 실행했으면 브라우저가 이어서 만드는 마우스 이벤트를 막는다 (새 화면의 다른 버튼·입력칸이 눌리지 않게)
 document.addEventListener('touchend', e => { if (firedByTouch) { firedByTouch = false; e.preventDefault(); } }, { passive: false });
@@ -722,7 +730,7 @@ setInterval(() => {
     let w = $('.k-timeout');
     if (!w) {
       w = document.createElement('div'); w.className = 'k-timeout';
-      w.innerHTML = `<div><b>${easy() ? '시간이 얼마 안 남았어요' : '입력 시간이 곧 종료됩니다'}</b><div class="n"></div><p class="k-sub">${easy() ? '더 하시려면 아래를 눌러 주세요.' : '계속하시려면 버튼을 눌러 주십시오.'}</p><button class="k-btn primary" style="width:100%;justify-content:center;min-height:4rem;font-size:1.2rem" data-act="sheetClose">${easy() ? '시간 더 쓸게요' : '계속하기'}</button></div>`;
+      w.innerHTML = `<div><b>${easy() ? '시간이 얼마 안 남았어요' : '입력 시간이 곧 종료됩니다'}</b><div class="n"></div><p class="k-sub">${easy() ? '더 하시려면 아래를 눌러 주세요.' : '계속하시려면 버튼을 눌러 주십시오.'}</p><button class="k-btn primary" style="width:100%;justify-content:center;min-height:4rem;font-size:1.2rem" data-act="idleOk">${easy() ? '시간 더 쓸게요' : '계속하기'}</button></div>`;
       $('.kiosk').appendChild(w);
       if (voiceLv()) speak(easy() ? '시간이 얼마 안 남았어요. 더 하시려면 시간 더 쓸게요를 눌러 주세요.' : '입력 시간이 곧 종료됩니다.', voiceLv());
     }
@@ -764,8 +772,13 @@ function boot() {
   setHtmlAttrs(); clock(); setInterval(clock, 30000);
   render();
   let fromHash = null; try { fromHash = decode(decodeURIComponent(location.hash)); } catch {}
-  if (fromHash) { history.replaceState(null, '', location.pathname + location.search); applyProfile(fromHash, 'link'); }
-  setTimeout(startAI, qs.has('preload') ? 0 : 1500);
+  if (fromHash) {
+    history.replaceState(null, '', location.pathname + location.search);
+    if (fromHash._t && Date.now() / 60000 - fromHash._t > QR_FRESH_MIN) toast('QR이 오래됐어요. 휴대폰에서 새 QR을 보여 주세요.', 4000);
+    else applyProfile(fromHash, 'link');
+  }
+  const light = navigator.connection?.saveData || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+  if (!light || qs.has('preload')) setTimeout(startAI, qs.has('preload') ? 0 : 1500);
 }
 boot();
 
